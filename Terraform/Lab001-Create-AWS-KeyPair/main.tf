@@ -1,24 +1,19 @@
-# Terraform Lab 001 - Create AWS Key Pair
+provider "aws" {
+  region = "us-east-1"
+}
 
-## Objective
-Create an AWS EC2 Key Pair named `datacenter-kp` using Terraform.
+resource "tls_private_key" "datacenter_key" {
+  algorithm = "RSA"
+  rsa_bits  = 4096
+}
 
-## Resources
-- tls_private_key
-- aws_key_pair
-- local_file
+resource "aws_key_pair" "datacenter_kp" {
+  key_name   = "datacenter-kp"
+  public_key = tls_private_key.datacenter_key.public_key_openssh
+}
 
-## Commands
-
-```bash
-terraform init
-terraform plan
-terraform apply
-```
-
-## Skills Learned
-- Terraform resources
-- AWS Provider
-- TLS Provider
-- Local Provider
-- Creating EC2 Key Pairs
+resource "local_file" "private_key" {
+  filename        = "datacenter-kp.pem"
+  content         = tls_private_key.datacenter_key.private_key_pem
+  file_permission = "0400"
+}
